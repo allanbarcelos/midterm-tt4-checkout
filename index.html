@@ -120,22 +120,6 @@
     <script>
         const { jsPDF } = window.jspdf;
 
-        document.getElementById('questionScore').addEventListener('input', function () {
-            let value = this.value;
-
-            value = value.replace(/[^0-9]/g, '');
-
-            if (value !== "") {
-                let intValue = parseInt(value, 10);
-                if (intValue > 10) {
-                    intValue = 10;
-                } else if (intValue < 0) {
-                    intValue = 0;
-                }
-                this.value = intValue;
-            }
-        });
-
         document.addEventListener("DOMContentLoaded", function () {
             const studentCodeInput = document.getElementById("studentCode");
             const studentNameInput = document.getElementById("studentName");
@@ -174,6 +158,13 @@
             }
 
             studentCodeInput.addEventListener("input", () => {
+
+                if (studentCodeInput.value.trim() !== "") {
+                    document.getElementById("helpStudentCodeRequired").style.display = 'none';
+                } else {
+                    document.getElementById("helpStudentCodeRequired").style.display = 'block';
+                }
+
                 // Allow only numbers in studentCode
                 studentCodeInput.value = studentCodeInput.value.replace(/\D/g, ''); // Remove non-digit characters
                 updateStudentAccordionLabel();
@@ -181,16 +172,52 @@
             });
 
             studentNameInput.addEventListener("input", () => {
-                updateStudentAccordionLabel();
-                validateForm();
-            });
 
-            studentNameInput.addEventListener("input", () => {
+                if (studentNameInput.value.trim() !== "") {
+                    document.getElementById("helpStudentNameRequired").style.display = 'none';
+                } else {
+                    document.getElementById("helpStudentNameRequired").style.display = 'block';
+                }
+
+                updateStudentAccordionLabel();
                 validateStudentName();
                 validateForm();
             });
 
-            questionScoreInput.addEventListener('input', () => { validateForm(); updateQuestionScoreAccordionLabel() });
+            // Update question score and apply validation (range 0 to 10)
+            questionScoreInput.addEventListener('input', () => {
+                // Ensure the input is numeric and within the range of 0 to 10
+                let value = questionScoreInput.value.replace(/[^0-9]/g, ''); // Remove non-numeric characters
+
+                if (value !== "") {
+                    let intValue = parseInt(value, 10);
+                    if (intValue > 10) {
+                        intValue = 10; // Cap the value at 10
+                    } else if (intValue < 0) {
+                        intValue = 0; // Set a minimum value of 0
+                    }
+                    questionScoreInput.value = intValue;
+                }
+
+                if (questionScoreInput.value.trim() !== "") {
+                    document.getElementById("helpquestionScore").style.display = 'none';
+                } else {
+                    document.getElementById("helpquestionScore").style.display = 'block';
+                }
+
+                // Trigger form validation and update accordion label
+                validateForm();
+                updateQuestionScoreAccordionLabel();
+            });
+
+            // Prevent non-numeric input on keydown event
+            questionScoreInput.addEventListener('keydown', function (event) {
+                // Allow only number keys (0-9), backspace, delete, and arrow keys
+                if (!/[0-9]/.test(event.key) && event.key !== "Backspace" && event.key !== "Delete" &&
+                    event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+                    event.preventDefault();  // Prevent the input of non-numeric characters
+                }
+            });
 
             studentNameInput.addEventListener("keydown", function (event) {
                 const nameParts = studentNameInput.value.trim().split(/\s+/);
@@ -204,34 +231,34 @@
         const items = [
             "Read the provided documentation carefully",
             "Clarify any doubts during the allocated time",
-            "Create and submit the &nbsp; <code>read.txt</code>&nbsp; file on the LEA platform",
+            "Create and submit the 'read.txt' file on the LEA platform",
             "Ensure the file format follows the required standard",
             "Run the correct commands to start the Docker container",
             "Access the application in the browser using the correct port",
             "Complete all multiple-choice questions within the allocated time",
-            "Download and extract the &nbsp;<code>midterm-tt4.zip</code>&nbsp; file",
-            "Ensure the generated &nbsp;<code>.7z</code>&nbsp; file follows the required name format",
-            "Submit only the &nbsp;<code>.7z</code>&nbsp; file on the LEA platform",
-            "Download and extract &nbsp;<code>project.zip</code>&nbsp; into the correct directory",
+            "Download and extract the 'midterm-tt4.zip' file",
+            "Ensure the generated '.7z' file follows the required name format",
+            "Submit only the '.7z' file on the LEA platform",
+            "Download and extract 'project.zip' into the correct directory",
             "Initialize a Git repository and make the first commit",
             "Create a public GitHub repository and push the files correctly",
-            "Modify the &nbsp;<code>Dockerfile</code>&nbsp; to meet the Nginx configuration requirements",
-            "Create the &nbsp;<code>list-products.html</code>&nbsp; page and implement 12 Bootstrap Cards",
+            "Modify the 'Dockerfile' to meet the Nginx configuration requirements",
+            "Create the 'list-products.html' page and implement 12 Bootstrap Cards",
             "Ensure product images are stored in the correct folder and referenced properly",
             "Configure JavaScript and SCSS files correctly for Webpack",
-            "Test the application locally using &nbsp;<code>npm run start</code>&nbsp;",
+            "Test the application locally using 'npm run start'",
             "Build and run the Docker image locally",
-            "Push the Docker image to DockerHub with version &nbsp;<code>v1.0.0</code>&nbsp;",
-            "Create and submit &nbsp;<code>project.txt</code>&nbsp; with the correct GitHub and DockerHub links",
-            "Fork a teammate&#39;s repository",
-            "Create the &#34;add-products.html&#34; page with a product addition form",
+            "Push the Docker image to DockerHub with version 'v1.0.0'",
+            "Create and submit 'project.txt' with the correct GitHub and DockerHub links",
+            "Fork a teammate's repository",
+            "Create the 'add-products.html' page with a product addition form",
             "Follow project design using Bootstrap for styling",
-            "Commit and open a pull request in the teammate&#39;s repository",
+            "Commit and open a pull request in the teammate's repository",
             "Review and approve the received pull request",
             "Update the local repository after approval using 'git pull'",
             "Rebuild the Docker image with version 'v1.1.0'",
             "Push the updated Docker image to DockerHub",
-            "Create and submit &#34;collaboration.txt&#34; with the correct repository and DockerHub links",
+            "Create and submit 'collaboration.txt' with the correct repository and DockerHub links",
             "Follow all instructions and meet submission deadlines",
             "Ensure correct structuring of files and folders",
             "Use GitHub, Docker, and Webpack correctly",
@@ -240,42 +267,72 @@
             "Effectively collaborate in the final stage"
         ];
 
+
         function generateItems() {
             const container = document.getElementById("itemsContainer");
-            // container.innerHTML = "";
 
             items.forEach((item, index) => {
                 const itemDiv = document.createElement("div");
                 itemDiv.classList.add("accordion-item");
 
                 itemDiv.innerHTML = `
-                        <h2 class="accordion-header" id="heading${index}">
-                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="false" aria-controls="collapse${index}">
-                            ${item}
-                            </button>
-                        </h2>
-                        <div id="collapse${index}" class="accordion-collapse collapse" aria-labelledby="heading${index}" data-bs-parent="#itemsContainer">
-                            <div class="accordion-body">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="item${index}" id="item${index}Yes" value="10">
-                                    <label class="form-check-label" for="item${index}Yes">Yes</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="item${index}" id="item${index}No" value="-1" checked>
-                                    <label class="form-check-label" for="item${index}No">No</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="item${index}" id="item${index}Partial" value="1">
-                                    <label class="form-check-label" for="item${index}Partial">Partial</label>
-                                </div>
-                                <div class="form-floating mt-3">
-                                    <textarea class="form-control" placeholder="Leave a comment here" id="evaluation${index}"></textarea>
-                                    <label for="floatingTextarea">Comments</label>
-                                </div>
+                    <h2 class="accordion-header" id="heading${index}">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="false" aria-controls="collapse${index}">
+                        ${item}&nbsp;&#45;&nbsp;<span class="badge rounded-pill bg-danger">No</span>
+                        </button>
+                    </h2>
+                    <div id="collapse${index}" class="accordion-collapse collapse" aria-labelledby="heading${index}" data-bs-parent="#itemsContainer">
+                        <div class="accordion-body">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="item${index}" id="item${index}Yes" value="10">
+                                <label class="form-check-label" for="item${index}Yes">Yes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="item${index}" id="item${index}No" value="-1" checked>
+                                <label class="form-check-label" for="item${index}No">No</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="item${index}" id="item${index}Partial" value="1">
+                                <label class="form-check-label" for="item${index}Partial">Partial</label>
+                            </div>
+                            <div class="form-floating mt-3">
+                                <textarea class="form-control" placeholder="Leave a comment here" id="comment${index}"></textarea>
+                                <label for="floatingTextarea">Comments</label>
                             </div>
                         </div>
+                    </div>
                 `;
+
                 container.appendChild(itemDiv);
+
+                // Atualizar o título com a opção escolhida
+                const radioButtons = document.querySelectorAll(`input[name="item${index}"]`);
+
+                radioButtons.forEach(radio => {
+                    radio.addEventListener('change', function () {
+                        const selectedOption = document.querySelector(`input[name="item${index}"]:checked`);
+                        const selectedText = selectedOption.nextElementSibling.innerText;
+                        const accordionButton = document.querySelector(`#heading${index} .accordion-button`);
+
+                        let bg;
+                        switch (selectedText) {
+                            case "Yes":
+                                bg = "bg-success";
+                                break;
+                            case "No":
+                                bg = "bg-danger";
+                                break;
+                            case "Partial":
+                                bg = "bg-warning";
+                                break;
+                            default:
+                                bg = "bg-secondary";
+                                break;
+                        }
+
+                        accordionButton.innerHTML = `${item}&nbsp;&#45;&nbsp;<span class="badge rounded-pill ${bg}">${selectedText}</span>`;
+                    });
+                });
             });
         }
 
@@ -296,15 +353,29 @@
         }
 
         function generatePDF() {
+
+            const studentCodeInput = document.getElementById("studentCode");
+            const studentNameInput = document.getElementById("studentName");
+
             const doc = new jsPDF();
             let y = 10;
 
+            doc.setFontSize(18);
+            doc.text("Checkout Evaluation", 10, 10);
+
             doc.setFontSize(16);
-            doc.text("Checkout Evaluation", 10, y);
+            doc.setFont("helvetica", "bold");
+
             y += 10;
 
+            doc.text(`${studentCodeInput.value} - ${studentNameInput.value}`, 10, y);
+
             doc.setFontSize(12);
+
+            y += 10;
+
             doc.text(`Final Score: ${document.getElementById("finalScore").innerText.split(": ")[1]}`, 10, y);
+
             y += 10;
 
             items.forEach((item, index) => {
@@ -314,15 +385,20 @@
                 }
 
                 const selectedOption = document.querySelector(`input[name="item${index}"]:checked`);
-                const evaluationText = document.getElementById(`evaluation${index}`).value;
+                const commentText = document.getElementById(`comment${index}`).value;
 
-                let responseText = `${index + 1}. ${item}\n   Response: ${selectedOption.nextElementSibling.innerText}`;
-                if (evaluationText.trim() !== "") {
-                    responseText += `\n   Your Evaluation: ${evaluationText}`;
+                let comment = `${((index + 1) < 10) ? '0' : ''}${index + 1}. ${item}: ${selectedOption.nextElementSibling.innerText}`;
+                if (commentText.trim() !== "") {
+                    comment += `\n\nComment: ${commentText}`;
                 }
 
-                doc.text(responseText, 10, y);
-                y += 10;
+                doc.text(comment, 10, y);
+
+                if (commentText.trim() !== "") {
+                    y += 20;
+                } else {
+                    y += 10;
+                }
             });
 
             doc.save("Checkout_Evaluation.pdf");
