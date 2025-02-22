@@ -296,8 +296,10 @@
                                 <label class="form-check-label" for="item${index}Partial">Partial</label>
                             </div>
                             <div class="form-floating mt-3">
-                                <textarea class="form-control" placeholder="Leave a comment here" id="comment${index}"></textarea>
+                                <textarea class="form-control" placeholder="Leave a comment here" id="comment${index}" name="comment${index}" style="resize:none; height: 100px"></textarea>
                                 <label for="floatingTextarea">Comments</label>
+                                <span class="float-end badge bg-secondary" style="margin-top: -25px; margin-right: 5px;" id="textarea-char-counter-comment${index}">0/140</span>
+
                             </div>
                         </div>
                     </div>
@@ -334,6 +336,22 @@
                     });
                 });
             });
+
+            // Add event listeners for all textareas
+            document.querySelectorAll('textarea').forEach(t => {
+                
+                t.addEventListener('input', function () {
+                    const counter = document.getElementById(`textarea-char-counter-${this.name}`);
+                    const currentLength = t.value.length;
+                    counter.textContent = `${currentLength}/300`;
+                    // Limitar a quantidade de caracteres a 140
+                    if (currentLength > 300) {
+                        t.value = this.value.substring(0, 300);  // Restringe a entrada a 140 caracteres
+                        counter.textContent = "300/300";  // Define o contador como 140/140
+                    }
+                });
+            });
+
         }
 
         function calculateFinalScore() {
@@ -374,7 +392,16 @@
 
             y += 10;
 
-            doc.text(`Final Score: ${document.getElementById("finalScore").innerText.split(": ")[1]}`, 10, y);
+            // doc.text(`Final Score: ${document.getElementById("finalScore").innerText.split(": ")[1]}`, 10, y);
+
+            // Get the width of the text to align it to the right
+            const finalScoreText = `Final Score: ${document.getElementById("finalScore").innerText.split(": ")[1]}`;
+            const textWidth = doc.getTextWidth(finalScoreText);
+
+            // Calculate position on the right side of the page
+            const xPosition = 210 - textWidth - 10; // 210 is the width of an A4 page in mm (with a margin of 10)
+
+            doc.text(finalScoreText, xPosition, y);
 
             y += 10;
 
@@ -387,22 +414,59 @@
                 const selectedOption = document.querySelector(`input[name="item${index}"]:checked`);
                 const commentText = document.getElementById(`comment${index}`).value;
 
-                let comment = `${((index + 1) < 10) ? '0' : ''}${index + 1}. ${item}: ${selectedOption.nextElementSibling.innerText}`;
-                if (commentText.trim() !== "") {
-                    comment += `\n\nComment: ${commentText}`;
+                let optionText = selectedOption.nextElementSibling.innerText;
+                let comment = `${((index + 1) < 10) ? '0' : ''}${index + 1}. ${item}: `;
+
+                // Split the comment to handle the color change for the selected option
+                let firstPart = comment; // Text before the option (Item number + Item name)
+                let coloredText = optionText; // The selected option ("Yes", "No", or "Partial")
+                let restOfText = '';
+
+                // Write the first part (before the option)
+                doc.setTextColor(0, 0, 0); // Default color (black)
+                doc.text(firstPart, 10, y);
+
+                // Now, handle the color of the selected option
+                if (coloredText === "Yes") {
+                    doc.setTextColor(0, 128, 0); // Green for Yes
+                } else if (coloredText === "No") {
+                    doc.setTextColor(255, 0, 0); // Red for No
+                } else if (coloredText === "Partial") {
+                    doc.setTextColor(255, 165, 0); // Orange for Partial
                 }
 
-                doc.text(comment, 10, y);
+                // Write the colored option (Yes/No/Partial)
+                doc.text(coloredText, doc.getTextWidth(firstPart) + 10, y);
 
+                // Reset the color back to black for the rest of the comment
+                doc.setTextColor(0, 0, 0);
+
+                // If there's a comment, add it under the option
                 if (commentText.trim() !== "") {
-                    y += 20;
+                    doc.setTextColor(0, 0, 255); // Azul para o comentário
+                    // restOfText = `\n\nComment: ${commentText}`;
+                    // doc.text(restOfText, 10, y);
+
+                    // Usa splitTextToSize para dividir o comentário em várias linhas, com limite de largura
+                    const maxWidth = 190; // Largura máxima antes de quebrar a linha (ajuste conforme necessário)
+                    // const lines = doc.splitTextToSize(`\n\nComment: ${commentText}`, maxWidth);
+                    const lines = doc.splitTextToSize(`\n\n${commentText}`, maxWidth);
+
+                    // Escreve as linhas do comentário, considerando a quebra automática
+                    doc.text(lines, 10, y);
+
+                    doc.setTextColor(0, 0, 0); // Cor preta para o restante do texto
+                    y += 30;
                 } else {
                     y += 10;
                 }
+
             });
 
             doc.save("Checkout_Evaluation.pdf");
         }
+
+
 
         document.addEventListener("DOMContentLoaded", generateItems);
     </script>
