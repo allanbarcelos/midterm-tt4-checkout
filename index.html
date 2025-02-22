@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Evaluation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Checkout Evaluation</h2>
+
+
+        <div class="alert alert-info" role="alert">
+            <p>Following my active and participatory teaching model, I would like to offer you the opportunity to
+                participate in the correction of your exam. This way, you can calculate your final grade based on the
+                criteria I will use. The grade starts with the score you obtained on the questions. Each "yes" adds 10
+                points, each "no" subtracts 1 point, and each "partial" adds 1 point.</p>
+
+            <p>I would also like you to explain why you chose each option. Please write a detailed comment on what I
+                should consider in your exam, especially regarding this criterion.</p>
+            <p>The maximum final grade will be 10, which will be converted to a percentage. I will also be evaluating
+                your exam and will use the same form. At the end, I will compare the grade I assign with the grade you
+                calculated. If there is a significant discrepancy, I will reach out so we can analyze your process
+                together. If the differences are minor, the higher grade will be considered as final. For example, if my
+                evaluation gives you an 8, but yours gives you 8.7, I will consider your grade.</p>
+            <p>Once finished, I kindly ask you to leave your feedback and suggestions about this exam model. I would
+                also appreciate it if you could share any thoughts on my classes, so I can improve and adapt the
+                teaching to better meet each student's needs.</p>
+            <p>After completing the form, please click "Generate PDF" and submit it in the corresponding activity
+                section on the LEA portal.</p>
+        </div>
+
+        <div class="alert alert-warning" role="alert">
+            <p class="fw-bold">Don&grave;t worry! All items are initially marked as 'no' by default. As you go through
+                each item and complete
+                your self-assessment, you'll notice your final grade will update accordingly.</p>
+        </div>
+
+        <div class="d-flex mb-3 align-items-center gap-2">
+            <h4 class="me-auto" id="finalScore">Final Score: </h4>
+            <button class="btn btn-primary" id="calculateFinalScoreBtn" onclick="calculateFinalScore()"
+                disabled>Calculate Final Score</button>
+            <button class="btn btn-success" id="downloadPdfBtn" style="display: none;" onclick="generatePDF()">Download
+                PDF</button>
+        </div>
+
+
+        <div class="accordion" id="itemsContainer">
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingStudentId">
+                    <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#studentId" aria-expanded="true" aria-controls="studentId">
+                        Student:
+                    </button>
+                </h2>
+                <div id="studentId" class="accordion-collapse collapse show" aria-labelledby="StudentId"
+                    data-bs-parent="#itemsContainer">
+                    <div class="accordion-body">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-12 col-sm-5 col-md-3 col-lg-2 col-xl-2">
+                                <label for="helpStudentCode" class="form-label">Student Code</label>
+                                <input type="text" class="form-control" name="studentCode" id="studentCode"
+                                    aria-describedby="helpStudentCode" placeholder="" />
+                                <small id="helpStudentCode" class="form-text text-muted">
+                                    Only numbers
+                                    <span id="helpStudentCodeRequired" class="text-danger float-end">required</span>
+                                </small>
+                            </div>
+                            <div class="col-12 col-sm-7 col-md-5 col-lg-4 col-xl-3">
+                                <label for="helpStudentName" class="form-label">Name</label>
+                                <input type="text" class="form-control" name="studentName" id="studentName"
+                                    aria-describedby="helpStudentName" placeholder="" />
+                                <small id="helpStudentName" class="form-text text-muted">Only First and Last, eg.:
+                                    John Doe
+                                    <span id="helpStudentNameRequired" class="text-danger float-end">required</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingQuestionsGrade">
+                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#questionsGrade" aria-expanded="false" aria-controls="questionsGrade">
+                        Questions Score (0-10):
+                    </button>
+                </h2>
+                <div id="questionsGrade" class="accordion-collapse collapse" aria-labelledby="QuestionsGrade"
+                    data-bs-parent="#itemsContainer">
+                    <div class="accordion-body pb-5">
+                        <input type="number" id="questionScore" class="form-control mb-3" min="0" max="10" step="1"
+                            placeholder="Type your score min 0 max 10" aria-describedby="helpquestionScore">
+                        <small id="helpquestionScore" class="form-text text-muted">
+                            <span id="helpQuestionScoreRequired" class="text-danger float-end">required</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        document.getElementById('questionScore').addEventListener('input', function () {
+            let value = this.value;
+
+            value = value.replace(/[^0-9]/g, '');
+
+            if (value !== "") {
+                let intValue = parseInt(value, 10);
+                if (intValue > 10) {
+                    intValue = 10;
+                } else if (intValue < 0) {
+                    intValue = 0;
+                }
+                this.value = intValue;
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const studentCodeInput = document.getElementById("studentCode");
+            const studentNameInput = document.getElementById("studentName");
+            const questionScoreInput = document.getElementById('questionScore');
+
+            const calculateFinalScoreBtn = document.getElementById('calculateFinalScoreBtn');
+            const accordionStudentButton = document.querySelector("#headingStudentId .accordion-button");
+            const accordionQuestionsGradeButton = document.querySelector("#headingQuestionsGrade .accordion-button");
+
+            function updateStudentAccordionLabel() {
+                const studentCode = studentCodeInput.value.trim();
+                const studentName = studentNameInput.value.trim();
+
+                accordionStudentButton.textContent = `Student: ${studentCode || ''} - ${studentName || ''}`;
+            }
+
+            function updateQuestionScoreAccordionLabel() {
+                const questionScore = questionScoreInput.value.trim();
+                const score = parseFloat(questionScore);
+                accordionQuestionsGradeButton.textContent = `Questions Score: ${isNaN(score) ? '' : score.toFixed(2)}`;
+            }
+
+            function validateStudentName() {
+                const nameParts = studentNameInput.value.trim().split(/\s+/);
+                if (nameParts.length > 2) {
+                    studentNameInput.value = nameParts.slice(0, 2).join(" ");
+                }
+            }
+
+            function validateForm() {
+                if (studentCodeInput.value && studentNameInput.value && questionScoreInput.value) {
+                    calculateFinalScoreBtn.disabled = false;
+                } else {
+                    calculateFinalScoreBtn.disabled = true;
+                }
+            }
+
+            studentCodeInput.addEventListener("input", () => {
+                // Allow only numbers in studentCode
+                studentCodeInput.value = studentCodeInput.value.replace(/\D/g, ''); // Remove non-digit characters
+                updateStudentAccordionLabel();
+                validateForm();
+            });
+
+            studentNameInput.addEventListener("input", () => {
+                updateStudentAccordionLabel();
+                validateForm();
+            });
+
+            studentNameInput.addEventListener("input", () => {
+                validateStudentName();
+                validateForm();
+            });
+
+            questionScoreInput.addEventListener('input', () => { validateForm(); updateQuestionScoreAccordionLabel() });
+
+            studentNameInput.addEventListener("keydown", function (event) {
+                const nameParts = studentNameInput.value.trim().split(/\s+/);
+                if (event.key === ' ' && nameParts.length >= 2) {
+                    event.preventDefault();
+                }
+            });
+        });
+
+
+        const items = [
+            "Read the provided documentation carefully",
+            "Clarify any doubts during the allocated time",
+            "Create and submit the &nbsp; <code>read.txt</code>&nbsp; file on the LEA platform",
+            "Ensure the file format follows the required standard",
+            "Run the correct commands to start the Docker container",
+            "Access the application in the browser using the correct port",
+            "Complete all multiple-choice questions within the allocated time",
+            "Download and extract the &nbsp;<code>midterm-tt4.zip</code>&nbsp; file",
+            "Ensure the generated &nbsp;<code>.7z</code>&nbsp; file follows the required name format",
+            "Submit only the &nbsp;<code>.7z</code>&nbsp; file on the LEA platform",
+            "Download and extract &nbsp;<code>project.zip</code>&nbsp; into the correct directory",
+            "Initialize a Git repository and make the first commit",
+            "Create a public GitHub repository and push the files correctly",
+            "Modify the &nbsp;<code>Dockerfile</code>&nbsp; to meet the Nginx configuration requirements",
+            "Create the &nbsp;<code>list-products.html</code>&nbsp; page and implement 12 Bootstrap Cards",
+            "Ensure product images are stored in the correct folder and referenced properly",
+            "Configure JavaScript and SCSS files correctly for Webpack",
+            "Test the application locally using &nbsp;<code>npm run start</code>&nbsp;",
+            "Build and run the Docker image locally",
+            "Push the Docker image to DockerHub with version &nbsp;<code>v1.0.0</code>&nbsp;",
+            "Create and submit &nbsp;<code>project.txt</code>&nbsp; with the correct GitHub and DockerHub links",
+            "Fork a teammate&#39;s repository",
+            "Create the &#34;add-products.html&#34; page with a product addition form",
+            "Follow project design using Bootstrap for styling",
+            "Commit and open a pull request in the teammate&#39;s repository",
+            "Review and approve the received pull request",
+            "Update the local repository after approval using 'git pull'",
+            "Rebuild the Docker image with version 'v1.1.0'",
+            "Push the updated Docker image to DockerHub",
+            "Create and submit &#34;collaboration.txt&#34; with the correct repository and DockerHub links",
+            "Follow all instructions and meet submission deadlines",
+            "Ensure correct structuring of files and folders",
+            "Use GitHub, Docker, and Webpack correctly",
+            "Perform adequate testing to ensure project functionality",
+            "Maintain code clarity and organization",
+            "Effectively collaborate in the final stage"
+        ];
+
+        function generateItems() {
+            const container = document.getElementById("itemsContainer");
+            // container.innerHTML = "";
+
+            items.forEach((item, index) => {
+                const itemDiv = document.createElement("div");
+                itemDiv.classList.add("accordion-item");
+
+                itemDiv.innerHTML = `
+                        <h2 class="accordion-header" id="heading${index}">
+                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="false" aria-controls="collapse${index}">
+                            ${item}
+                            </button>
+                        </h2>
+                        <div id="collapse${index}" class="accordion-collapse collapse" aria-labelledby="heading${index}" data-bs-parent="#itemsContainer">
+                            <div class="accordion-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="item${index}" id="item${index}Yes" value="10">
+                                    <label class="form-check-label" for="item${index}Yes">Yes</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="item${index}" id="item${index}No" value="-1" checked>
+                                    <label class="form-check-label" for="item${index}No">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="item${index}" id="item${index}Partial" value="1">
+                                    <label class="form-check-label" for="item${index}Partial">Partial</label>
+                                </div>
+                                <div class="form-floating mt-3">
+                                    <textarea class="form-control" placeholder="Leave a comment here" id="evaluation${index}"></textarea>
+                                    <label for="floatingTextarea">Comments</label>
+                                </div>
+                            </div>
+                        </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function calculateFinalScore() {
+            let totalScore = parseFloat(document.getElementById("questionScore").value) || 0;
+
+            items.forEach((item, index) => {
+                const selectedOption = document.querySelector(`input[name="item${index}"]:checked`);
+                totalScore += parseFloat(selectedOption.value);
+            });
+
+            const maxPossibleScore = items.length * 10 + 10;
+            let normalizedScore = (totalScore / maxPossibleScore) * 10;
+            normalizedScore = Math.max(0, normalizedScore).toFixed(2);
+
+            document.getElementById("finalScore").innerHTML = `Final Score: <span style="color: ${normalizedScore > 6 ? 'green' : normalizedScore > 5 ? 'orange' : 'red'}  ">${normalizedScore}</span>`;
+            document.getElementById("downloadPdfBtn").style.display = "block";
+        }
+
+        function generatePDF() {
+            const doc = new jsPDF();
+            let y = 10;
+
+            doc.setFontSize(16);
+            doc.text("Checkout Evaluation", 10, y);
+            y += 10;
+
+            doc.setFontSize(12);
+            doc.text(`Final Score: ${document.getElementById("finalScore").innerText.split(": ")[1]}`, 10, y);
+            y += 10;
+
+            items.forEach((item, index) => {
+                if (y > 270) { // Prevent overflow, add new page if necessary
+                    doc.addPage();
+                    y = 10;
+                }
+
+                const selectedOption = document.querySelector(`input[name="item${index}"]:checked`);
+                const evaluationText = document.getElementById(`evaluation${index}`).value;
+
+                let responseText = `${index + 1}. ${item}\n   Response: ${selectedOption.nextElementSibling.innerText}`;
+                if (evaluationText.trim() !== "") {
+                    responseText += `\n   Your Evaluation: ${evaluationText}`;
+                }
+
+                doc.text(responseText, 10, y);
+                y += 10;
+            });
+
+            doc.save("Checkout_Evaluation.pdf");
+        }
+
+        document.addEventListener("DOMContentLoaded", generateItems);
+    </script>
+</body>
+
+</html>
